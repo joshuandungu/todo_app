@@ -1,5 +1,5 @@
 import 'package:sqflite/sqflite.dart';
-import 'package:path_provider/path_provider.dart'; 
+import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io';
@@ -71,7 +71,7 @@ class DatabaseHelper {
       return Todo.fromMap(maps[i]);
     });
   }
-  
+
   Future<int> updateTodo(Todo todo) async {
     if (kIsWeb) {
       final index = _webTodos.indexWhere((t) => t.id == todo.id);
@@ -89,7 +89,7 @@ class DatabaseHelper {
       whereArgs: [todo.id],
     );
   }
-  
+
   Future<int> deleteTodo(int id) async {
     if (kIsWeb) {
       final initialLength = _webTodos.length;
@@ -102,5 +102,58 @@ class DatabaseHelper {
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  Future<List<Todo>> searchTodos(String query) async {
+    if (kIsWeb) {
+      return _webTodos
+          .where((todo) =>
+              todo.title.contains(query) || todo.content.contains(query))
+          .toList();
+    }
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(
+      'todos',
+      where: 'title LIKE ? OR content LIKE ?',
+      whereArgs: ['%$query%', '%$query%'],
+    );
+    return List.generate(maps.length, (i) {
+      return Todo.fromMap(maps[i]);
+    });
+  }
+
+  Future<List<Todo>> getTodosSortedByDate() async {
+    if (kIsWeb) {
+      List<Todo> sortedTodos = List.from(_webTodos);
+      sortedTodos.sort((a, b) => b.createdDate.compareTo(a.createdDate));
+      return sortedTodos;
+    }
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query(
+      'todos',
+      orderBy: 'createdDate DESC',
+    );
+    return List.generate(maps.length, (i) {
+      return Todo.fromMap(maps[i]);
+    });
+  }
+
+  Future<List<Todo>> filterTodos() async {
+    if (kIsWeb) {
+      DateTime oneWeekAgo = DateTime.now().subtract(const Duration(days: 7));
+      return _webTodos
+          .where((todo) => todo.createdDate.isAfter(oneWeekAgo))
+          .toList();
+    }
+    Database db = await database;
+    DateTime oneWeekAgo = DateTime.now().subtract(const Duration(days: 7));
+    List<Map<String, dynamic>> maps = await db.query(
+      'todos',
+      where: 'createdDate >= ?',
+      whereArgs: [oneWeekAgo.toIso8601String()],
+    );
+    return List.generate(maps.length, (i) {
+      return Todo.fromMap(maps[i]);
+    });
   }
 }

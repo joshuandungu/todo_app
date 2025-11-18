@@ -23,7 +23,8 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
   }
 
   Future<void> _addTodo() async {
-    if (_titleController.text.isNotEmpty && _contentController.text.isNotEmpty) {
+    if (_titleController.text.isNotEmpty &&
+        _contentController.text.isNotEmpty) {
       Todo newTodo = Todo(
         title: _titleController.text,
         content: _contentController.text,
@@ -53,6 +54,15 @@ class _AddTodoScreenState extends State<AddTodoScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add Todo'),
+        backgroundColor: Colors.blue,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
